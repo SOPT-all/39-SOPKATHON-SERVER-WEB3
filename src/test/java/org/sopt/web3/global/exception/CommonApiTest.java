@@ -12,9 +12,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.slf4j.LoggerFactory;
 import org.sopt.web3.global.code.GlobalErrorCode;
+import org.sopt.web3.global.code.SuccessCode;
 import org.sopt.web3.global.response.BaseResponse;
 import org.sopt.web3.global.response.PageResponse;
-import org.sopt.web3.health.code.HealthSuccessCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,13 +51,13 @@ class CommonApiTest {
 	private MockMvc mockMvc;
 
 	@Test
-	void 상태_확인_API가_공통_성공_응답을_반환한다() throws Exception {
-		mockMvc.perform(get("/health"))
+	void 컨트롤러가_공통_성공_응답을_반환한다() throws Exception {
+		mockMvc.perform(get("/test/success"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success").value(true))
 			.andExpect(jsonPath("$.code").value("200"))
-			.andExpect(jsonPath("$.message").value("서버 상태 조회 성공"))
-			.andExpect(jsonPath("$.data.status").value("UP"));
+			.andExpect(jsonPath("$.message").value("테스트 조회 성공"))
+			.andExpect(jsonPath("$.data").value("ok"));
 	}
 
 	@ParameterizedTest
@@ -89,7 +90,7 @@ class CommonApiTest {
 
 	@Test
 	void 지원하지_않는_메서드는_405와_Allow_헤더를_유지한다() throws Exception {
-		mockMvc.perform(post("/health"))
+		mockMvc.perform(post("/test/success"))
 			.andExpect(status().isMethodNotAllowed())
 			.andExpect(header().string("Allow", containsString("GET")))
 			.andExpect(jsonPath("$.code").value("405"));
@@ -179,6 +180,11 @@ class CommonApiTest {
 	@RequestMapping("/test")
 	static class TestController {
 
+		@GetMapping("/success")
+		ResponseEntity<BaseResponse<String>> success() {
+			return BaseResponse.success(TestSuccessCode.TEST_FETCHED, "ok");
+		}
+
 		@GetMapping("/business")
 		ResponseEntity<BaseResponse<Void>> business(@RequestParam GlobalErrorCode code) {
 			throw new BusinessException(code);
@@ -186,7 +192,7 @@ class CommonApiTest {
 
 		@PostMapping("/validation")
 		ResponseEntity<BaseResponse<Void>> validation(@Valid @RequestBody TestRequest request) {
-			return BaseResponse.success(HealthSuccessCode.HEALTH_FETCHED);
+			return BaseResponse.success(TestSuccessCode.TEST_FETCHED);
 		}
 
 		@GetMapping("/unexpected")
@@ -197,13 +203,28 @@ class CommonApiTest {
 		@GetMapping("/parameter")
 		ResponseEntity<BaseResponse<Void>> parameter(
 			@RequestParam @Min(value = 1, message = "개수는 1 이상이어야 합니다.") int count) {
-			return BaseResponse.success(HealthSuccessCode.HEALTH_FETCHED);
+			return BaseResponse.success(TestSuccessCode.TEST_FETCHED);
 		}
 
 		@GetMapping("/pages")
 		ResponseEntity<BaseResponse<PageResponse<String>>> pages(Pageable pageable) {
-			return BaseResponse.success(HealthSuccessCode.HEALTH_FETCHED,
+			return BaseResponse.success(TestSuccessCode.TEST_FETCHED,
 				PageResponse.from(new PageImpl<>(List.of("item"), pageable, 10)));
+		}
+	}
+
+	enum TestSuccessCode implements SuccessCode {
+
+		TEST_FETCHED;
+
+		@Override
+		public HttpStatus getHttpStatus() {
+			return HttpStatus.OK;
+		}
+
+		@Override
+		public String getMessage() {
+			return "테스트 조회 성공";
 		}
 	}
 
