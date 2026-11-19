@@ -8,9 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.slf4j.LoggerFactory;
 import org.sopt.web3.global.code.GlobalErrorCode;
 import org.sopt.web3.global.response.BaseResponse;
 import org.sopt.web3.global.response.PageResponse;
