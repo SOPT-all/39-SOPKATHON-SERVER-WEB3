@@ -15,6 +15,7 @@ import org.sopt.web3.global.code.GlobalErrorCode;
 import org.sopt.web3.global.code.SuccessCode;
 import org.sopt.web3.global.response.BaseResponse;
 import org.sopt.web3.global.response.PageResponse;
+import org.sopt.web3.support.MySqlTestConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -26,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,7 +46,8 @@ import jakarta.validation.constraints.NotBlank;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(CommonApiTest.TestConfig.class)
+@Import({CommonApiTest.TestConfig.class, MySqlTestConfiguration.class})
+@ActiveProfiles("test")
 class CommonApiTest {
 
 	@Autowired
