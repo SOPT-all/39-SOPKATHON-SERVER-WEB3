@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: web3
+  profiles:
+    default: local
+
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never

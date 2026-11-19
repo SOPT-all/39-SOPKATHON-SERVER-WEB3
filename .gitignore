@@ -1,0 +1,29 @@
+# Gradle / build
+.gradle/
+.kotlin/
+build/
+out/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# macOS
+.DS_Store
+._*
+
+# Local environment / credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Runtime files
+logs/
+*.log
+*.pid
+*.hprof

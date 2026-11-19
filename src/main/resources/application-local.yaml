@@ -1,0 +1,3 @@
+logging:
+  level:
+    org.sopt.web3: debug

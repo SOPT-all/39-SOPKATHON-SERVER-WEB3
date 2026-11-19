@@ -1,0 +1,4 @@
+logging:
+  level:
+    root: info
+    org.sopt.web3: info
