@@ -213,6 +213,7 @@ feat/#15-post-list
 | 운영 Swagger | https://sopkathon-web3.r-e.kr/swagger-ui/index.html |
 | API 문서 JSON | https://sopkathon-web3.r-e.kr/v3/api-docs |
 | 자동 배포 결과 | [GitHub Actions](https://github.com/SOPT-all/39-SOPKATHON-SERVER-WEB3/actions) |
+| EC2 탄력적 IP | `15.164.68.145` |
 
 ### 배포
 
@@ -222,10 +223,10 @@ feat/#15-post-list
 
 ### 상태, 로그와 재시작
 
-등록된 키 경로와 현재 EC2 공개 IP로 접속합니다.
+등록된 키 경로로 접속합니다.
 
 ```bash
-ssh -i /path/to/sopkathon-key.pem ubuntu@<EC2_PUBLIC_IP>
+ssh -i /path/to/sopkathon-key.pem ubuntu@15.164.68.145
 ```
 
 EC2에서 다음 명령을 실행합니다.
