@@ -1,0 +1,7 @@
+logging:
+  level:
+    root: info
+    org.sopt.web3: info
+
+server:
+  forward-headers-strategy: framework

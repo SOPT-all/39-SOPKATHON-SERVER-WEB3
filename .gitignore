@@ -1,0 +1,30 @@
+# Gradle 캐시 및 빌드 결과물
+.gradle/
+.kotlin/
+build/
+out/
+
+# IDE 설정 파일
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# macOS 생성 파일
+.DS_Store
+._*
+
+# 로컬 환경변수 및 인증 정보
+.env
+.env.*
+!.env.example
+!.env.prod.example
+*.pem
+*.key
+
+# 실행 중 생성되는 파일
+logs/
+*.log
+*.pid
+*.hprof
