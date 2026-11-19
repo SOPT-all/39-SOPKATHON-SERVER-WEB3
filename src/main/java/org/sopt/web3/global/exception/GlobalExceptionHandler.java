@@ -60,7 +60,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		Map<String, String> fieldErrors = new LinkedHashMap<>();
 		exception.getParameterValidationResults().forEach(result -> {
 			String parameterName = result.getMethodParameter().getParameterName();
-			String key = parameterName != null ? parameterName : "arg" + result.getMethodParameter().getParameterIndex();
+			String key = parameterName != null ? parameterName
+				: "arg" + result.getMethodParameter().getParameterIndex();
 			result.getResolvableErrors().forEach(error -> fieldErrors.putIfAbsent(key, error.getDefaultMessage()));
 		});
 		logException(statusCode, exception);
