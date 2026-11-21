@@ -119,10 +119,11 @@ DB 통합 테스트는 Testcontainers가 별도 MySQL을 실행하므로 Docker�
 
 **DB 스키마 변경**
 
-- 서비스용 SQL은 `src/main/resources/db/migration/V1__create_tables.sql` 형식으로 추가합니다. 첫 마이그레이션을 추가할 때 폴더를 생성합니다.
+- 서비스용 SQL은 `src/main/resources/db/migration/`에 버전별로 추가합니다. 현재 V1은 놀이 목록, V2는 초등학생 문제·회차·답변 테이블과 고정 사용자 ID `1`을 준비합니다.
 - 다음 변경은 `V2`, `V3`처럼 새 파일로 추가하고, 이미 적용한 SQL은 수정하지 않습니다.
 - Flyway가 스키마를 변경하고 JPA는 `ddl-auto: validate`로 검증합니다.
-- 현재 서비스용 테이블은 없으며, `src/test/resources/db/test-migration`의 SQL은 테스트 전용입니다.
+- 실제 문제·보기 콘텐츠와 회차 배정은 별도로 준비해야 합니다. 테스트용 문제·회차는 운영 DB에 등록하지 않습니다.
+- `src/test/resources/db/test-migration`의 SQL은 테스트 전용입니다.
 
 ---
 
