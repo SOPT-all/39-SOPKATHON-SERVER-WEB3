@@ -18,7 +18,7 @@ public class SchoolGameService {
 	@Transactional(readOnly = true)
 	public GameListResponse getGames() {
 		List<GameListResponse.Game> games = topicRepository.findAllByOrderByIdAsc().stream()
-			.map(topic -> new GameListResponse.Game(topic.getId(), topic.getName(), topic.getRules(), topic.getExample()))
+			.map(topic -> new GameListResponse.Game(topic.getId(), topic.getName(), topic.getRules()))
 			.toList();
 		return new GameListResponse(games);
 	}

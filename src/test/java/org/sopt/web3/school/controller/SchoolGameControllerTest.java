@@ -28,7 +28,6 @@ class SchoolGameControllerTest {
 		when(topic.getId()).thenReturn(1L);
 		when(topic.getName()).thenReturn("문장 완성하기");
 		when(topic.getRules()).thenReturn("빈칸에 어울리는 표현을 골라요.");
-		when(topic.getExample()).thenReturn("짝꿍과 책을 읽어요.");
 		when(repository.findAllByOrderByIdAsc()).thenReturn(List.of(topic));
 
 		mockMvc.perform(get("/school/games"))
@@ -38,7 +37,7 @@ class SchoolGameControllerTest {
 			.andExpect(jsonPath("$.data.games[0].gameId").value(1))
 			.andExpect(jsonPath("$.data.games[0].name").value("문장 완성하기"))
 			.andExpect(jsonPath("$.data.games[0].rules").value("빈칸에 어울리는 표현을 골라요."))
-			.andExpect(jsonPath("$.data.games[0].example").value("짝꿍과 책을 읽어요."));
+			.andExpect(jsonPath("$.data.games[0].example").doesNotHaveJsonPath());
 	}
 
 	@Test

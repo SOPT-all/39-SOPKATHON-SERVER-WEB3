@@ -15,9 +15,7 @@ public record GameListResponse(
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED, example = "문장 완성하기")
 		String name,
 		@Schema(requiredMode = Schema.RequiredMode.REQUIRED, example = "빈칸에 어울리는 표현을 골라요.")
-		String rules,
-		@Schema(requiredMode = Schema.RequiredMode.REQUIRED, example = "짝꿍과 책을 읽어요.")
-		String example
+		String rules
 	) {
 	}
 }
