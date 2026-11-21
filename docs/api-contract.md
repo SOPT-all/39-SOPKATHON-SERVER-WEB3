@@ -77,21 +77,108 @@
 
 `POST /preschool/recommendations` · 성공 응답 `200 OK`
 
-| 요청 본문 | 타입 | 필수 | 제약 |
-| --- | --- | --- | --- |
-| `age` | integer | 예 | 4~7세 |
-| `placeName` | string | 예 | 공백 외 문자를 포함한 장소명 |
-| `waitingMinutes` | integer | 아니오 | 생략 가능. 값은 5·10·15·20·25·30 중 하나 |
+AI는 입력한 장소명을 기준으로 검색해 주변 사물 찾기 질문을 생성한다. AI 콘텐츠는 DB에 저장하지 않는다. **찾았어요**와 마침 화면 이동은 화면에서 처리한다.
 
-- `data`는 놀이 이름 `title`(string), 설명 `description`(string), 질문 `questions`(배열, 정확히 3개)을 포함한다. 각 질문의 `text`와 `image`는 별도 필드이며, 이미지 전달 형식은 협의한다.
-- AI는 장소명을 기준으로 검색한다. AI가 반환한 콘텐츠는 DB에 저장하지 않는다. **찾았어요**와 마침 화면 이동은 화면에서 처리한다.
-- 요청값 검증 실패는 `400`을 반환한다. 검색·추천 실패 및 결과 없음 응답은 협의한다.
+#### 요청
+
+| 필드 | 타입 | 필수 | Nullable | 설명 |
+| --- | --- | --- | --- | --- |
+| `age` | integer | 예 | 아니오 | 아이의 나이(4~7세). 예시는 `5` |
+| `placeName` | string | 예 | 아니오 | 공백 외 문자를 포함한 장소명. 예시는 `"병원"` |
+| `waitingMinutes` | integer | 아니오 | 아니오 | 생략 가능. 제공할 때는 5·10·15·20·25·30 중 하나 |
+
+요청 본문은 `application/json` 형식이다. 쿼리 파라미터는 없다.
+
+#### 응답
+
+| 필드 | 타입 | 필수 | Nullable | 설명 |
+| --- | --- | --- | --- | --- |
+| `success` | boolean | 예 | 아니오 | 요청 성공 여부 |
+| `code` | string | 예 | 아니오 | HTTP 상태 코드 문자열 |
+| `message` | string | 예 | 아니오 | 응답 메시지 |
+| `data` | object | 예 | 아니오 | 생성 결과 |
+| `data.placeName` | string | 예 | 아니오 | 요청받은 장소명 |
+| `data.questions` | array | 예 | 아니오 | 출제 순서대로 정렬한 질문 3개 |
+| `data.questions[].text` | string | 예 | 아니오 | 질문 문구 |
+| `data.questions[].imageUrl` | string | 예 | 아니오 | 질문에 대응하는 SVG 이미지 URL |
+
+**200 응답 예시**
+
+```json
+{
+  "success": true,
+  "code": "200",
+  "message": "요청 처리 성공",
+  "data": {
+    "placeName": "병원",
+    "questions": [
+      { "text": "의자를 찾아볼까요?", "imageUrl": "https://example.com/images/chair.svg" },
+      { "text": "시계를 찾아볼까요?", "imageUrl": "https://example.com/images/clock.svg" },
+      { "text": "문을 찾아볼까요?", "imageUrl": "https://example.com/images/door.svg" }
+    ]
+  }
+}
+```
+
+#### HTTP 상태
+
+| 상태 | 응답 |
+| --- | --- |
+| `200 OK` | 질문 3개 생성 성공 |
+| `400 Bad Request` | 요청값 검증 실패 시 `data`에 필드별 오류를 반환한다. 잘못된 JSON은 공통 형식에 따라 `data: null`을 반환한다. |
+| `422 Unprocessable Content` | 요청 형식은 유효하지만 해당 장소에 맞는 질문을 만들 수 없다. `data`는 `null`이다. |
+| `503 Service Unavailable` | AI 검색·생성 서비스의 일시적인 실패로 결과를 얻지 못했다. `data`는 `null`이다. |
+| `500 Internal Server Error` | 예상하지 못한 서버 오류. `data`는 `null`이다. |
+
+**400 응답 예시 · 요청값 검증 실패**
+
+```json
+{
+  "success": false,
+  "code": "400",
+  "message": "요청 값이 올바르지 않습니다.",
+  "data": { "age": "나이는 4~7세여야 합니다." }
+}
+```
+
+**422 응답 예시 · 장소에 맞는 질문 생성 불가**
+
+```json
+{
+  "success": false,
+  "code": "422",
+  "message": "해당 장소에 맞는 질문을 만들 수 없습니다. 다른 장소를 입력해 주세요.",
+  "data": null
+}
+```
+
+**503 응답 예시 · AI 서비스 일시 실패**
+
+```json
+{
+  "success": false,
+  "code": "503",
+  "message": "일시적인 문제로 질문을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+  "data": null
+}
+```
+
+**500 응답 예시 · 서버 내부 오류**
+
+```json
+{
+  "success": false,
+  "code": "500",
+  "message": "서버 내부 오류입니다.",
+  "data": null
+}
+```
 
 ### 놀이 목록 조회
 
 `GET /school/games` · 성공 응답 `200 OK`
 
-선택한 나이와 관계없이 같은 놀이 목록을 반환한다. 프런트엔드는 선택한 놀이의 규칙과 예시를 시작 전 안내 화면에 표시한다.
+초등학생 대상 나이는 8~10세다. 세 나이 모두 같은 놀이 목록을 반환하며 목록 조회 시 나이를 받지 않는다. 프런트엔드는 선택한 놀이의 규칙과 예시를 시작 전 안내 화면에 표시한다.
 
 | 요청 본문 | 타입 | 필수 | 제약 |
 | --- | --- | --- | --- |
@@ -163,7 +250,7 @@
 }
 ```
 
-`rules`와 `example`은 응답 초안에 포함하며, 데이터 제공 위치는 [ERD 내용](adr/003-erd.md)에 기록된 협의 항목이다.
+`rules`와 `example`은 각각 `topic.rules`와 `topic.example`에서 제공한다. 목록은 놀이 ID 오름차순으로 반환한다.
 
 ### 놀이 시작
 
@@ -176,7 +263,7 @@
 | 필드 | 타입 | 필수 | Nullable | 설명 |
 | --- | --- | --- | --- | --- |
 | `gameId` | integer | 예 | 아니오 | 시작할 놀이의 ID. 경로 변수이며 예시는 `1` |
-| `age` | integer | 예 | 아니오 | 선택한 나이. JSON 본문에 8~13세 정수로 전달하며 예시는 `9` |
+| `age` | integer | 예 | 아니오 | 선택한 나이. JSON 본문에 8~10세 정수로 전달하며 예시는 `9` |
 
 쿼리 파라미터는 없다. 요청 본문은 `application/json` 형식이며 사용자 ID는 서버에서 적용한다.
 
@@ -248,7 +335,7 @@
 | 상태 | 응답 |
 | --- | --- |
 | `201 Created` | 회차 생성 성공. 회차 ID와 출제된 문제 3개를 반환한다. |
-| `400 Bad Request` | `gameId`의 형식이 잘못됐거나 요청 본문이 없거나 잘못됐다. `age`가 누락됐거나 정수가 아니거나 8~13 범위를 벗어났을 때도 반환한다. 필드 검증 실패는 `data`에 오류 객체를 반환하고, 본문 또는 경로 변수의 형식을 해석할 수 없으면 `data`는 `null`이다. |
+| `400 Bad Request` | `gameId`의 형식이 잘못됐거나 요청 본문이 없거나 잘못됐다. `age`가 누락됐거나 정수가 아니거나 8~10 범위를 벗어났을 때도 반환한다. 필드 검증 실패는 `data`에 오류 객체를 반환하고, 본문 또는 경로 변수의 형식을 해석할 수 없으면 `data`는 `null`이다. |
 | `404 Not Found` | `gameId`에 해당하는 놀이가 존재하지 않는다. `data`는 `null`이다. |
 | `500 Internal Server Error` | DB 조회 또는 회차 저장 중 예상하지 못한 서버 오류가 발생했다. `data`는 `null`이다. |
 
@@ -260,7 +347,7 @@
   "code": "400",
   "message": "요청 값이 올바르지 않습니다.",
   "data": {
-    "age": "나이는 8세 이상 13세 이하여야 합니다."
+    "age": "나이는 8세 이상 10세 이하여야 합니다."
   }
 }
 ```

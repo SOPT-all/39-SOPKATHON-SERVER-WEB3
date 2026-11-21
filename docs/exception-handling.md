@@ -32,6 +32,7 @@
 | 404 Not Found | 요청한 리소스가 없음 |
 | 409 Conflict | 현재 리소스 상태와 충돌함 |
 | 500 Internal Server Error | 예상하지 못한 서버 오류 |
+| 503 Service Unavailable | 서비스가 일시적으로 요청을 처리할 수 없음 |
 
 ## 변경 시 확인
 
