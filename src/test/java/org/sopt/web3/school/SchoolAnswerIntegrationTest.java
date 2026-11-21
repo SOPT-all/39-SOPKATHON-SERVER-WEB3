@@ -13,8 +13,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.sopt.web3.school.dto.AnswerSubmitRequest;
 import org.sopt.web3.school.dto.AnswerSubmitResponse;
 import org.sopt.web3.school.service.SchoolAnswerService;
