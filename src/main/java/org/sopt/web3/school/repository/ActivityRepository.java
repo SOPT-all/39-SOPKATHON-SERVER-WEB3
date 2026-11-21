@@ -12,6 +12,8 @@ import jakarta.persistence.LockModeType;
 
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
+	Optional<Activity> findByIdAndAuthId(Long id, Long authId);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select activity from Activity activity where activity.id = :id and activity.authId = :authId")
 	Optional<Activity> findOwnedByIdForUpdate(@Param("id") Long id, @Param("authId") Long authId);

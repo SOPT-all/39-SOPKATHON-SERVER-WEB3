@@ -13,6 +13,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.sopt.web3.school.dto.AnswerSubmitRequest;
 import org.sopt.web3.school.dto.AnswerSubmitResponse;
 import org.sopt.web3.school.service.SchoolAnswerService;
@@ -29,6 +31,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.jayway.jsonpath.JsonPath;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -38,6 +42,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 class SchoolAnswerIntegrationTest {
 
 	private static final String ENDPOINT = "/school/rounds/{roundId}/answers";
+	private static final String RESULT_ENDPOINT = "/school/rounds/{roundId}/result";
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -50,6 +55,87 @@ class SchoolAnswerIntegrationTest {
 
 	@Autowired
 	private PlatformTransactionManager transactionManager;
+
+	@Test
+	void 새로_시작한_회차에_답변을_제출하고_결과를_조회한다() throws Exception {
+		jdbcTemplate.update("UPDATE question SET target_age = 9 WHERE id IN (501, 502, 503)");
+		var started = mockMvc.perform(post("/school/games/1/rounds")
+				.contentType(MediaType.APPLICATION_JSON).content("{\"age\":9}"))
+			.andExpect(status().isCreated())
+			.andReturn();
+		long roundId = JsonPath.parse(started.getResponse().getContentAsString()).read("$.data.roundId", Long.class);
+
+		for (String answer : List.of(
+			"{\"questionId\":501,\"choiceId\":1001}",
+			"{\"questionId\":502,\"choiceId\":1004}",
+			"{\"questionId\":503,\"choiceId\":1005}")) {
+			mockMvc.perform(post(ENDPOINT, roundId).contentType(MediaType.APPLICATION_JSON).content(answer))
+				.andExpect(status().isOk());
+		}
+
+		mockMvc.perform(get(RESULT_ENDPOINT, roundId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data.answeredCount").value(3))
+			.andExpect(jsonPath("$.data.correctCount").value(2))
+			.andExpect(jsonPath("$.data.reviews[1].selectedChoice.choiceId").value(1004));
+
+		mockMvc.perform(post("/school/games/1/rounds")
+				.contentType(MediaType.APPLICATION_JSON).content("{\"age\":9}"))
+			.andExpect(status().isConflict());
+	}
+
+	@ParameterizedTest
+	@ValueSource(ints = {0, 1, 3})
+	void 회차_결과를_출제_순서대로_반환한다(int correctCount) throws Exception {
+		service.submitAnswer(101L, new AnswerSubmitRequest(503L, correctCount == 3 ? 1005L : 1006L));
+		service.submitAnswer(101L, new AnswerSubmitRequest(502L, correctCount == 3 ? 1003L : 1004L));
+		service.submitAnswer(101L, new AnswerSubmitRequest(501L, correctCount > 0 ? 1001L : 1002L));
+
+		var response = mockMvc.perform(get(RESULT_ENDPOINT, 101))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.code").value("200"))
+			.andExpect(jsonPath("$.data.answeredCount").value(3))
+			.andExpect(jsonPath("$.data.correctCount").value(correctCount))
+			.andExpect(jsonPath("$.data.reviews.length()").value(3))
+			.andExpect(jsonPath("$.data.reviews[0].questionId").value(501))
+			.andExpect(jsonPath("$.data.reviews[1].questionId").value(502))
+			.andExpect(jsonPath("$.data.reviews[2].questionId").value(503))
+			.andExpect(jsonPath("$.data.reviews[0].correctAnswer").value("친구가 공을 던져요."));
+
+		if (correctCount == 0) {
+			response.andExpect(jsonPath("$.data.reviews[0].selectedChoice.choiceId").value(1002))
+				.andExpect(jsonPath("$.data.reviews[0].selectedChoice.text").value("마셔요"))
+				.andExpect(jsonPath("$.data.reviews[0].feedback").value("물은 마시고, 공은 던져요."));
+		} else {
+			response.andExpect(jsonPath("$.data.reviews[0].selectedChoice").doesNotHaveJsonPath())
+				.andExpect(jsonPath("$.data.reviews[0].feedback").doesNotHaveJsonPath());
+		}
+	}
+
+	@Test
+	void 결과_조회에_잘못된_회차나_완료되지_않은_회차를_거절한다() throws Exception {
+		mockMvc.perform(get(RESULT_ENDPOINT, "abc")).andExpect(status().isBadRequest());
+		mockMvc.perform(get(RESULT_ENDPOINT, 999)).andExpect(status().isNotFound());
+		mockMvc.perform(get(RESULT_ENDPOINT, 201)).andExpect(status().isNotFound());
+		service.submitAnswer(101L, new AnswerSubmitRequest(501L, 1001L));
+		mockMvc.perform(get(RESULT_ENDPOINT, 101))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value("409"));
+	}
+
+	@Test
+	void Swagger에_회차_결과_조회가_표시된다() throws Exception {
+		String path = "$.paths['/school/rounds/{roundId}/result'].get.responses";
+		mockMvc.perform(get("/v3/api-docs"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath(path + "['200']").exists())
+			.andExpect(jsonPath(path + "['400']").exists())
+			.andExpect(jsonPath(path + "['404']").exists())
+			.andExpect(jsonPath(path + "['409']").exists())
+			.andExpect(jsonPath(path + "['500']").exists())
+			.andExpect(jsonPath("$.components.schemas.RoundResultResponse.properties.reviews").exists());
+	}
 
 	@Test
 	void 오답도_저장하고_선택한_보기의_피드백을_반환한다() throws Exception {
