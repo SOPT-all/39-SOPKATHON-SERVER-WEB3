@@ -42,8 +42,8 @@ class SchoolSeedDataIntegrationTest {
 	void 콘텐츠만_등록하고_사용자_1의_풀이_이력은_만들지_않는다() {
 		assertThat(count("auth")).isEqualTo(1);
 		assertThat(count("topic")).isEqualTo(3);
-		assertThat(count("question")).isEqualTo(49);
-		assertThat(count("choice")).isEqualTo(98);
+		assertThat(count("question")).isEqualTo(589);
+		assertThat(count("choice")).isEqualTo(1178);
 		assertThat(count("activity")).isZero();
 		assertThat(count("activity_question")).isZero();
 		assertThat(count("answer")).isZero();
@@ -80,6 +80,7 @@ class SchoolSeedDataIntegrationTest {
 		int initialCount = jdbcTemplate.queryForObject(
 			"SELECT COUNT(*) FROM question WHERE topic_id = ? AND target_age = ?",
 			Integer.class, gameId, age);
+		assertThat(initialCount).isGreaterThanOrEqualTo(65);
 		String started = mockMvc.perform(post("/school/games/{gameId}/rounds", gameId)
 				.contentType(MediaType.APPLICATION_JSON).content("{\"age\":" + age + "}"))
 			.andExpect(status().isCreated())
