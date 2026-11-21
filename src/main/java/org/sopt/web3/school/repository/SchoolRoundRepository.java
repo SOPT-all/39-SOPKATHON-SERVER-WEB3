@@ -19,6 +19,21 @@ public class SchoolRoundRepository {
 
 	private final JdbcTemplate jdbcTemplate;
 
+	public List<ReviewRow> findReviews(long roundId) {
+		return jdbcTemplate.query("""
+			SELECT q.id AS question_id, ans.is_correct, q.correct_answer_text,
+			       c.id AS choice_id, c.content AS choice_text, c.feedback
+			FROM activity_question aq
+			JOIN answer ans ON ans.activity_question_id = aq.id
+			JOIN question q ON q.id = aq.question_id
+			JOIN choice c ON c.id = ans.choice_id
+			WHERE aq.activity_id = ?
+			ORDER BY aq.question_number, aq.id
+			""", (rs, rowNum) -> new ReviewRow(rs.getLong("question_id"), rs.getBoolean("is_correct"),
+			rs.getString("correct_answer_text"), rs.getLong("choice_id"), rs.getString("choice_text"),
+			rs.getString("feedback")), roundId);
+	}
+
 	public List<QuestionRow> findUnansweredQuestions(long gameId, int age, long userId, int choiceCount, int limit) {
 		return jdbcTemplate.query("""
 			SELECT q.id, q.content
@@ -69,5 +84,9 @@ public class SchoolRoundRepository {
 	}
 
 	public record QuestionRow(long id, String content) {
+	}
+
+	public record ReviewRow(long questionId, boolean correct, String correctAnswer,
+		long choiceId, String choiceText, String feedback) {
 	}
 }

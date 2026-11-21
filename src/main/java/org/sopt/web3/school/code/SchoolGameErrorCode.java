@@ -11,7 +11,8 @@ import lombok.RequiredArgsConstructor;
 public enum SchoolGameErrorCode implements ErrorCode {
 
 	GAME_NOT_FOUND(HttpStatus.NOT_FOUND, "요청한 놀이가 존재하지 않습니다."),
-	INSUFFICIENT_QUESTIONS(HttpStatus.CONFLICT, "놀이를 시작할 수 있는 문제가 부족합니다.");
+	INSUFFICIENT_QUESTIONS(HttpStatus.CONFLICT, "놀이를 시작할 수 있는 문제가 부족합니다."),
+	ROUND_NOT_COMPLETED(HttpStatus.CONFLICT, "모든 문제를 푼 뒤 결과를 확인할 수 있습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String message;
