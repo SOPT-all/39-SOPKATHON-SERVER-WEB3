@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +47,7 @@ class Web3ApplicationTest {
 
 	@Test
 	@Transactional
+	@Sql("/db/fixtures/clear-school-answers.sql")
 	void 선택한_놀이와_나이의_미풀이_문제_세_개를_회차에_저장한다() throws Exception {
 		jdbcTemplate.update("""
 			INSERT INTO question (id, topic_id, target_age, content, correct_answer_text) VALUES
@@ -97,6 +99,8 @@ class Web3ApplicationTest {
 	}
 
 	@Test
+	@Transactional
+	@Sql("/db/fixtures/clear-school-answers.sql")
 	void 나이_검증과_놀이_존재_여부와_문제_부족을_응답한다() throws Exception {
 		mockMvc.perform(post("/school/games/1/rounds").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"age\":11}"))
