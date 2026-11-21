@@ -32,7 +32,8 @@ public class SchoolRoundService {
 			throw new BusinessException(SchoolGameErrorCode.GAME_NOT_FOUND);
 		}
 
-		List<QuestionRow> candidates = roundRepository.findUnansweredQuestions(gameId, age, USER_ID, QUESTION_COUNT);
+		List<QuestionRow> candidates = roundRepository.findUnansweredQuestions(
+			gameId, age, USER_ID, CHOICE_COUNT, QUESTION_COUNT);
 		if (candidates.size() < QUESTION_COUNT) {
 			throw new BusinessException(SchoolGameErrorCode.INSUFFICIENT_QUESTIONS);
 		}

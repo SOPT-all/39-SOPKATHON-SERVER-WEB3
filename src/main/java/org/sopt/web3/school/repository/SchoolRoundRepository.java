@@ -19,11 +19,12 @@ public class SchoolRoundRepository {
 
 	private final JdbcTemplate jdbcTemplate;
 
-	public List<QuestionRow> findUnansweredQuestions(long gameId, int age, long userId, int limit) {
+	public List<QuestionRow> findUnansweredQuestions(long gameId, int age, long userId, int choiceCount, int limit) {
 		return jdbcTemplate.query("""
 			SELECT q.id, q.content
 			FROM question q
 			WHERE q.topic_id = ? AND q.target_age = ?
+			  AND (SELECT COUNT(*) FROM choice c WHERE c.question_id = q.id) = ?
 			  AND NOT EXISTS (
 			    SELECT 1
 			    FROM activity_question aq
@@ -34,7 +35,7 @@ public class SchoolRoundRepository {
 			ORDER BY q.id
 			LIMIT ?
 			""", (rs, rowNum) -> new QuestionRow(rs.getLong("id"), rs.getString("content")),
-			gameId, age, userId, limit);
+			gameId, age, choiceCount, userId, limit);
 	}
 
 	public List<Choice> findChoices(long questionId) {
