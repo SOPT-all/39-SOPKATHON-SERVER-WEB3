@@ -511,14 +511,14 @@ AI는 입력한 장소명을 기준으로 검색해 주변 사물 찾기 질문�
 | `data.reviews[].questionId` | integer | 예 | 아니오 | 문제 ID |
 | `data.reviews[].correct` | boolean | 예 | 아니오 | 정답 여부 |
 | `data.reviews[].correctAnswer` | string | 예 | 아니오 | 정답 표시 문구. 문장 완성하기는 완성된 정답 문장 |
-| `data.reviews[].selectedChoice` | object | 오답 시 | 오답은 아니오, 정답은 미정 | 사용자가 선택한 보기 |
+| `data.reviews[].selectedChoice` | object | 오답 시 | 아니오 | 사용자가 선택한 보기. 정답이면 생략 |
 | `data.reviews[].selectedChoice.choiceId` | integer | 보기 객체 포함 시 | 아니오 | 선택한 보기 ID |
 | `data.reviews[].selectedChoice.text` | string | 보기 객체 포함 시 | 아니오 | 선택한 보기 내용 |
-| `data.reviews[].feedback` | string | 오답 시 | 오답은 아니오, 정답은 미정 | 선택한 보기에 해당하는 설명 |
+| `data.reviews[].feedback` | string | 오답 시 | 아니오 | 선택한 보기에 해당하는 설명. 정답이면 생략 |
 
 **200 응답 예시**
 
-3문제 중 2문제를 맞힌 회차다. 예시에서는 정답 문항의 `selectedChoice`와 `feedback`을 생략했다. 생략하거나 `null`을 반환할지는 계약 확정 시 정한다.
+3문제 중 2문제를 맞힌 회차다. 정답 문항에서는 `selectedChoice`와 `feedback`을 생략한다.
 
 ```json
 {
@@ -560,10 +560,13 @@ AI는 입력한 장소명을 기준으로 검색해 주변 사물 찾기 질문�
 | --- | --- |
 | `200 OK` | 결과 조회 성공. 푼 문제 수, 맞힌 문제 수, 문항별 정답과 오답 복습 정보를 반환한다. |
 | `400 Bad Request` | 경로 변수 `roundId`를 정수로 해석할 수 없다. |
-| `404 Not Found` | 회차가 존재하지 않는다. |
+| `404 Not Found` | 고정 사용자 ID `1`의 회차가 존재하지 않는다. |
+| `409 Conflict` | 모든 문항에 답변을 제출하기 전에 결과를 조회했다. `data`는 `null`이다. |
 | `500 Internal Server Error` | 예상하지 못한 서버 오류가 발생했다. |
 
-실패 응답은 공통 `BaseResponse` 형식을 따른다. 필드별 검증 오류에는 오류 객체를 반환하며, 아래 경로 변수 형식 오류와 일반 실패 예시의 `data`는 `null`이다. 완료 전 조회의 응답은 협의한다.
+실패 응답은 공통 `BaseResponse` 형식을 따른다. 필드별 검증 오류에는 오류 객체를 반환하며, 아래 경로 변수 형식 오류와 일반 실패 예시의 `data`는 `null`이다.
+
+저장된 답변 수가 회차의 전체 문제 수와 같을 때 결과를 제공한다.
 
 **400 응답 예시 · 경로 변수 형식 오류**
 
