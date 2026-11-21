@@ -76,7 +76,7 @@ class SchoolSeedDataIntegrationTest {
 
 	@ParameterizedTest
 	@CsvSource({"1,8", "1,9", "1,10", "2,8", "2,9", "2,10", "3,8", "3,9", "3,10"})
-	void 모든_놀이와_나이에서_시작과_답변_저장_후_풀이_문제를_제외한다(int gameId, int age) throws Exception {
+	void 모든_놀이와_나이에서_답변과_결과를_확인하고_풀이_문제를_제외한다(int gameId, int age) throws Exception {
 		int initialCount = jdbcTemplate.queryForObject(
 			"SELECT COUNT(*) FROM question WHERE topic_id = ? AND target_age = ?",
 			Integer.class, gameId, age);
@@ -88,12 +88,14 @@ class SchoolSeedDataIntegrationTest {
 		var document = JsonPath.parse(started);
 		long roundId = document.read("$.data.roundId", Long.class);
 		List<Long> answeredIds = new ArrayList<>();
+		List<Long> selectedChoiceIds = new ArrayList<>();
 		for (int index = 0; index < 3; index++) {
 			long questionId = document.read("$.data.questions[" + index + "].questionId", Long.class);
 			boolean correct = index != 1;
 			long choiceId = jdbcTemplate.queryForObject(
 				"SELECT id FROM choice WHERE question_id = ? AND is_correct = ?", Long.class, questionId, correct);
 			answeredIds.add(questionId);
+			selectedChoiceIds.add(choiceId);
 			mockMvc.perform(post("/school/rounds/{roundId}/answers", roundId)
 					.contentType(MediaType.APPLICATION_JSON)
 					.content("{\"questionId\":" + questionId + ",\"choiceId\":" + choiceId + "}"))
@@ -101,6 +103,31 @@ class SchoolSeedDataIntegrationTest {
 				.andExpect(jsonPath("$.data.correct").value(correct))
 				.andExpect(jsonPath("$.data.feedback").isNotEmpty());
 		}
+
+		String resultBody = mockMvc.perform(get("/school/rounds/{roundId}/result", roundId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success").value(true))
+			.andExpect(jsonPath("$.code").value("200"))
+			.andExpect(jsonPath("$.data.answeredCount").value(3))
+			.andExpect(jsonPath("$.data.correctCount").value(2))
+			.andExpect(jsonPath("$.data.reviews.length()").value(3))
+			.andReturn().getResponse().getContentAsString();
+		var result = JsonPath.parse(resultBody);
+		List<Number> reviewedIds = result.read("$.data.reviews[*].questionId");
+		assertThat(reviewedIds.stream().map(Number::longValue).toList()).containsExactlyElementsOf(answeredIds);
+		for (int index = 0; index < 3; index++) {
+			String path = "$.data.reviews[" + index + "]";
+			assertThat(result.read(path + ".correct", Boolean.class)).isEqualTo(index != 1);
+			assertThat(result.read(path + ".correctAnswer", String.class)).isEqualTo(
+				jdbcTemplate.queryForObject("SELECT correct_answer_text FROM question WHERE id = ?",
+					String.class, answeredIds.get(index)));
+		}
+		long wrongChoiceId = selectedChoiceIds.get(1);
+		assertThat(result.read("$.data.reviews[1].selectedChoice.choiceId", Long.class)).isEqualTo(wrongChoiceId);
+		assertThat(result.read("$.data.reviews[1].selectedChoice.text", String.class)).isEqualTo(
+			jdbcTemplate.queryForObject("SELECT content FROM choice WHERE id = ?", String.class, wrongChoiceId));
+		assertThat(result.read("$.data.reviews[1].feedback", String.class)).isEqualTo(
+			jdbcTemplate.queryForObject("SELECT feedback FROM choice WHERE id = ?", String.class, wrongChoiceId));
 
 		var next = mockMvc.perform(post("/school/games/{gameId}/rounds", gameId)
 			.contentType(MediaType.APPLICATION_JSON).content("{\"age\":" + age + "}"));
