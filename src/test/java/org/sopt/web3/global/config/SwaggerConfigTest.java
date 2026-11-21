@@ -38,6 +38,20 @@ class SwaggerConfigTest {
 	private MockMvc mockMvc;
 
 	@Test
+	void 유아_추천_API_명세를_노출한다() throws Exception {
+		String endpoint = "$.paths['/preschool/recommendations'].post";
+		mockMvc.perform(get("/v3/api-docs"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath(endpoint + ".responses['200']").exists())
+			.andExpect(jsonPath(endpoint + ".responses['422']").exists())
+			.andExpect(jsonPath(endpoint + ".responses['503']").exists())
+			.andExpect(jsonPath("$.components.schemas.RecommendationRequest.properties.age.type").value("integer"))
+			.andExpect(jsonPath("$.components.schemas.RecommendationRequest.properties.placeName.type").value("string"))
+			.andExpect(jsonPath("$.components.schemas.RecommendationRequest.properties.waitingMinutes.type").value("integer"))
+			.andExpect(jsonPath("$.components.schemas.RecommendationResponse.properties.questions").exists());
+	}
+
+	@Test
 	void OpenAPI_문서에_기본_정보가_포함된다() throws Exception {
 		mockMvc.perform(get("/v3/api-docs"))
 			.andExpect(status().isOk())

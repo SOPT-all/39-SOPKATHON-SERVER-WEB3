@@ -3,6 +3,15 @@ spring:
     name: web3
   profiles:
     default: local
+  ai:
+    retry:
+      max-attempts: 1
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      timeout: 30s
+      max-retries: 0
+      chat:
+        model: ${OPENAI_MODEL:gpt-6.2-sol}
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME}
