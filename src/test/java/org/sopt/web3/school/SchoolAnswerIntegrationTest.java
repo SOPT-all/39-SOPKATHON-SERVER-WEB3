@@ -11,6 +11,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.sopt.web3.school.dto.AnswerSubmitRequest;
 import org.sopt.web3.school.dto.AnswerSubmitResponse;
 import org.sopt.web3.school.service.SchoolAnswerService;
@@ -135,11 +137,34 @@ class SchoolAnswerIntegrationTest {
 
 	@Test
 	void 필수값이_없으면_필드별_검증_오류를_반환한다() throws Exception {
-		mockMvc.perform(post(ENDPOINT, 101).contentType(MediaType.APPLICATION_JSON).content("{}"))
+		for (String body : List.of("{}", "{\"questionId\":null,\"choiceId\":null}")) {
+			mockMvc.perform(post(ENDPOINT, 101).contentType(MediaType.APPLICATION_JSON).content(body))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.code").value("400"))
+				.andExpect(jsonPath("$.data.questionId").value("문제 ID는 필수입니다."))
+				.andExpect(jsonPath("$.data.choiceId").value("보기 ID는 필수입니다."));
+		}
+		assertThat(answerCount()).isZero();
+	}
+
+	@ParameterizedTest
+	@ValueSource(strings = {
+		"{\"questionId\":501.9,\"choiceId\":1002}",
+		"{\"questionId\":501,\"choiceId\":1002.9}",
+		"{\"questionId\":501.9,\"choiceId\":1002.9}",
+		"{\"questionId\":501.0,\"choiceId\":1002}",
+		"{\"questionId\":501,\"choiceId\":1.002e3}",
+		"{\"questionId\":\"501\",\"choiceId\":1002}",
+		"{\"questionId\":501,\"choiceId\":\"1002\"}",
+		"{\"questionId\":9223372036854775808,\"choiceId\":1002}"
+	})
+	void JSON_정수가_아닌_ID는_400이고_답변을_저장하지_않는다(String body) throws Exception {
+		mockMvc.perform(post(ENDPOINT, 101).contentType(MediaType.APPLICATION_JSON).content(body))
 			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.success").value(false))
 			.andExpect(jsonPath("$.code").value("400"))
-			.andExpect(jsonPath("$.data.questionId").value("문제 ID는 필수입니다."))
-			.andExpect(jsonPath("$.data.choiceId").value("보기 ID는 필수입니다."));
+			.andExpect(jsonPath("$.message").value("요청 값이 올바르지 않습니다."))
+			.andExpect(jsonPath("$.data").isEmpty());
 		assertThat(answerCount()).isZero();
 	}
 

@@ -379,7 +379,7 @@ AI는 입력한 장소명을 기준으로 검색해 주변 사물 찾기 질문�
 | `questionId` | integer | 예 | 아니오 | 회차에 배정된 문제 ID. 본문 필드이며 예시는 `501` |
 | `choiceId` | integer | 예 | 아니오 | 선택한 보기 ID. 본문 필드이며 예시는 `1002` |
 
-쿼리 파라미터는 없다. 요청 본문은 `application/json` 형식이다.
+쿼리 파라미터는 없다. 요청 본문은 `application/json` 형식이다. `questionId`와 `choiceId`는 `Long` 범위의 JSON 정수만 허용하며 소수, 지수 표기, 숫자 문자열은 `400`으로 거절하고 답변을 저장하지 않는다.
 
 ```json
 {
