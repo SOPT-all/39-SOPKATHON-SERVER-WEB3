@@ -8,6 +8,7 @@
 | 코드 작성·수정 | [코드 컨벤션](docs/code-conventions.md), 관련 기존 코드 |
 | 기능 구현 | [PRD](docs/PRD.md), 관련 API 계약 |
 | API 구현·변경 | [API 계약](docs/api-contract.md), 코드 컨벤션 |
+| 예외 처리·응답 코드 작성·수정 | [예외 처리 규칙](docs/exception-handling.md), API 계약 |
 | DB·구조·배포 변경 | [아키텍처](docs/architecture.md), [ADR](docs/adr/) |
 | 이슈·브랜치·커밋·PR | [협업 규칙](docs/ground-rules.md), 해당 GitHub 템플릿 |
 

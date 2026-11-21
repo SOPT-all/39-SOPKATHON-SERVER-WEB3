@@ -10,7 +10,7 @@
 
 - 엔티티를 직접 반환하지 않고 응답 DTO를 사용한다. 공통 응답과 페이지네이션은 [API 계약](api-contract.md)을 따른다.
 - 요청 형식은 DTO에서 검증하고 업무 규칙은 Service에서 확인한다.
-- 기존 `BusinessException`, `ErrorCode`, `GlobalExceptionHandler`를 활용한다. 공통 처리를 컨트롤러마다 반복하지 않는다.
+- 예외와 응답 코드 작성은 [예외 처리 규칙](exception-handling.md)을 따른다.
 - 기존 코드와 요청 범위에 맞는 간결한 구현을 선택한다.
 
 ## 검증
